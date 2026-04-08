@@ -1,0 +1,25 @@
+# 기본
+pyspark
+pandas
+numpy
+openpyxl
+
+# AI 에이전트
+pydantic-ai
+google-generativeai
+python-dotenv
+
+# ML
+xgboost
+lightgbm
+catboost
+scikit-learn
+scipy
+statsmodels
+pingouin
+
+# 시각화
+matplotlib
+seaborn
+tqdm
+jupyterlab
