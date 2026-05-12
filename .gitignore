@@ -13,3 +13,6 @@ wheels/
 *.xlsx
 
 .env
+
+# API_key
+.streamlit/secrets.toml

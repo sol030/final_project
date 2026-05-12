@@ -1,0 +1,22 @@
+[
+  {
+    "month":"10월",
+    "total_user_count":3022290,
+    "revisit_user_count":1279795,
+    "revisit_rate":42.35,
+    "day1_revisit_user_count":315853,
+    "day1_revisit_rate":10.45,
+    "day7_revisit_user_count":163206,
+    "day7_revisit_rate":5.4
+  },
+  {
+    "month":"11월",
+    "total_user_count":3696117,
+    "revisit_user_count":1700324,
+    "revisit_rate":46.0,
+    "day1_revisit_user_count":469873,
+    "day1_revisit_rate":12.71,
+    "day7_revisit_user_count":232763,
+    "day7_revisit_rate":6.3
+  }
+]
