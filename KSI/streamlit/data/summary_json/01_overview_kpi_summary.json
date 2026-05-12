@@ -1,0 +1,36 @@
+[
+  {
+    "month":"10월",
+    "view_count":40777328,
+    "cart_count":898443,
+    "purchase_count":742773,
+    "remove_from_cart_count":0,
+    "total_revenue":229933212.6299999952,
+    "total_user_count":3022290,
+    "purchase_user_count":347118,
+    "total_session_count":9244421,
+    "purchase_session_count":629560,
+    "view_to_cart_rate":2.2,
+    "cart_to_purchase_rate":82.67,
+    "view_to_purchase_rate":1.82,
+    "purchase_user_rate":11.49,
+    "purchase_session_rate":6.81
+  },
+  {
+    "month":"11월",
+    "view_count":63554512,
+    "cart_count":2930018,
+    "purchase_count":916930,
+    "remove_from_cart_count":0,
+    "total_revenue":275193080.8100000024,
+    "total_user_count":3696117,
+    "purchase_user_count":441638,
+    "total_session_count":13776050,
+    "purchase_session_count":773214,
+    "view_to_cart_rate":4.61,
+    "cart_to_purchase_rate":31.29,
+    "view_to_purchase_rate":1.44,
+    "purchase_user_rate":11.95,
+    "purchase_session_rate":5.61
+  }
+]

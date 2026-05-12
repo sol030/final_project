@@ -1,0 +1,32 @@
+[
+  {
+    "month":"10월",
+    "stage":"view",
+    "count":40777328
+  },
+  {
+    "month":"10월",
+    "stage":"cart",
+    "count":898443
+  },
+  {
+    "month":"10월",
+    "stage":"purchase",
+    "count":742773
+  },
+  {
+    "month":"11월",
+    "stage":"view",
+    "count":63554512
+  },
+  {
+    "month":"11월",
+    "stage":"cart",
+    "count":2930018
+  },
+  {
+    "month":"11월",
+    "stage":"purchase",
+    "count":916930
+  }
+]

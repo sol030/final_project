@@ -1,0 +1,30 @@
+[
+  {
+    "month":"10월",
+    "group":"스마트폰 구매자",
+    "buyer_count":160437,
+    "revisit_buyer_count":113919,
+    "revisit_rate":71.01
+  },
+  {
+    "month":"10월",
+    "group":"전체 구매자",
+    "buyer_count":347118,
+    "revisit_buyer_count":259981,
+    "revisit_rate":74.9
+  },
+  {
+    "month":"11월",
+    "group":"스마트폰 구매자",
+    "buyer_count":192425,
+    "revisit_buyer_count":143520,
+    "revisit_rate":74.58
+  },
+  {
+    "month":"11월",
+    "group":"전체 구매자",
+    "buyer_count":441638,
+    "revisit_buyer_count":345868,
+    "revisit_rate":78.31
+  }
+]
