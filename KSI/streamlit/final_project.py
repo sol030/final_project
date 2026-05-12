@@ -628,15 +628,16 @@ left_col, right_col = st.columns([7, 3], gap="large")
 # 왼쪽: Tableau 영역
 # =============================================================================
 with left_col:
-    with st.container(border=True, height=920):
+    with st.container(border=True, height=1160):
         st.markdown('<div class="section-title">Tableau 대시보드</div>', unsafe_allow_html=True)
 
-        TABLEAU_URL = ""
+        TABLEAU_URL = "https://prod-kr-a.online.tableau.com/t/joeunsol112-263e2c660a/views/10___cloud_/1_?:origin=card_share_link&:embed=y"
 
         if TABLEAU_URL:
             components.iframe(
                 src=TABLEAU_URL,
-                height=560,
+                width=1200,
+                height=900,
                 scrolling=True
             )
         else:
@@ -697,7 +698,7 @@ with right_col:
         
         dashboard_page = st.selectbox(
             "대시보드 페이지",
-            ["전체 현황 분석", "코호트/리텐션", "스마트폰 브랜드 심화"]
+            ["전체 현황 분석", "유저행동 & 리텐션", "스마트폰 브랜드 심화"]
         )
         
         selected_month = st.selectbox(

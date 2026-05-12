@@ -15,4 +15,6 @@ wheels/
 .env
 
 # API_key
-.streamlit/secrets.toml
+# Streamlit secrets
+**/.streamlit/secrets.toml
+KSI/streamlit/.streamlit/secrets.toml
