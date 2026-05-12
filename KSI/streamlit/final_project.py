@@ -424,6 +424,8 @@ SYSTEM_PROMPT = """
 4. 확실한 데이터가 없는 경우에는 추측하지 말고 "현재 제공된 데이터만으로는 판단하기 어렵다"고 말한다.
 5. 대시보드 해설, 발표 문장, 인사이트 정리를 도와준다.
 6. 사용자가 발표용 문장을 요청하면 발표자가 말하는 톤으로 작성한다.
+7. 매출 단위는 "조 달러"라고 풀어 쓰지 말고, 대시보드 표기처럼 "$2,066조" 또는 "대시보드 기준 2,066조"처럼 표현한다.
+8. apple, samsung, xiaomi, huawei, lg처럼 브랜드명이 나오는 TOP5는 "카테고리"라고 단정하지 말고 "브랜드/품목 기준 TOP5"로 설명한다.
 """
 # =============================================================================
 # context 생성 함수
@@ -436,163 +438,271 @@ def format_number(value):
 
 
 def make_overview_context(summary_data, selected_month):
-    kpi_df = summary_data["overview_kpi"]
-    category_df = summary_data["overview_category_top5"]
-    daily_df = summary_data["overview_daily"]
-    first_vs_df = summary_data["overview_first_vs_revisit"]
-
-    if selected_month != "전체":
-        kpi_df = kpi_df[kpi_df["month"] == selected_month]
-        category_df = category_df[category_df["month"] == selected_month]
-        daily_df = daily_df[daily_df["month"] == selected_month]
-        first_vs_df = first_vs_df[first_vs_df["month"] == selected_month]
-
     context = "[전체 현황 분석 페이지]\n"
-    context += "이 페이지는 전체 매출, 유저 수, 구매 전환율, 퍼널, 일별 추이, 첫방문/재방문 매출, 카테고리 성과를 설명합니다.\n\n"
+    context += "이 페이지는 전체 매출, 유저 수, 구매 전환율, 퍼널, 일별 추이, 첫방문/재방문 매출, 브랜드/품목 성과를 설명합니다.\n\n"
 
-    context += "핵심 KPI:\n"
-    for _, row in kpi_df.iterrows():
-        context += f"""
-- {row['month']}
-  - view 수: {format_number(row['view_count'])}
-  - cart 수: {format_number(row['cart_count'])}
-  - purchase 수: {format_number(row['purchase_count'])}
-  - 전체 추정 매출: {row['total_revenue']:,.2f}
-  - 전체 유저 수: {format_number(row['total_user_count'])}
-  - 구매 유저 수: {format_number(row['purchase_user_count'])}
-  - view → purchase 전환율: {row['view_to_purchase_rate']}%
+    overview_display_kpi = {
+        "전체": """
+핵심 KPI:
+- 전체 매출: $2,066조
+- 전체 유저 수: 532만 명
+- 구매 전환율: 3.95%
+- 방문 매출: $1,908조
+- View 수: 23백만 건
+- Cart 수: 2,316천 건
+- Purchase 수: 1,403천 건
+- 브랜드/품목 기준 TOP5 매출: apple 1위, samsung 2위, xiaomi 3위, huawei 4위, lg 5위
+- 브랜드 현황: 구매 수 1위 samsung, 매출 1위 apple, 전환율 1위 samsung
+
+주의:
+- 위 수치는 Tableau 전체 현황 대시보드의 전체 선택 화면에 표시된 핵심 KPI 기준이다.
+- 전체 선택 상태에서는 10월/11월을 따로 비교하기보다 전체 합산 화면 기준으로 먼저 설명한다.
+""",
+        "10월": """
+핵심 KPI:
+- 전체 매출: $749조
+- 전체 유저 수: 302만 명
+- 구매 전환율: 4.45%
+- 방문 매출: $651.5조
+- View 수: 9백만 건
+- Cart 수: 573천 건
+- Purchase 수: 630천 건
+- 브랜드/품목 기준 TOP5 매출: apple 457.8조, samsung 244.6조, xiaomi 28.3조, huawei 5.4조, lucente 2.0조
+- 브랜드 현황: 구매 수 1위 samsung, 매출 1위 apple, 전환율 1위 samsung
+
+주의:
+- 위 수치는 Tableau 전체 현황 대시보드의 10월 선택 화면에 표시된 핵심 KPI 기준이다.
+- 10월 선택 상태에서는 10월 데이터만 설명하고, 11월과 비교하지 않는다.
+""",
+        "11월": """
+핵심 KPI:
+- 전체 매출: $1,317조
+- 전체 유저 수: 370만 명
+- 구매 전환율: 3.64%
+- 방문 매출: $1,190조
+- View 수: 14백만 건
+- Cart 수: 1,743천 건
+- Purchase 수: 773천 건
+- 브랜드/품목 기준 TOP5 매출: apple 796.5조, samsung 431.5조, xiaomi 52.1조, huawei 6.7조, lg 5.7조
+- 브랜드 현황: 구매 수 1위 samsung, 매출 1위 apple, 전환율 1위 samsung
+
+주의:
+- 위 수치는 Tableau 전체 현황 대시보드의 11월 선택 화면에 표시된 핵심 KPI 기준이다.
+- 11월 선택 상태에서는 11월 데이터만 설명하고, 10월과 비교하지 않는다.
 """
+    }
 
-    context += "\n카테고리별 TOP5 추정 매출:\n"
-    for _, row in category_df.iterrows():
-        context += f"- {row['month']} {row['rank']}위: {row['category_code']} / 매출 {row['revenue']:,.2f} / 구매수 {format_number(row['purchase_count'])}\n"
-
-    context += "\n첫방문 vs 재방문:\n"
-    for _, row in first_vs_df.iterrows():
-        context += f"- {row['month']} {row['visit_type']}: 매출 {row['revenue']:,.2f}, 매출 비중 {row['revenue_ratio']}%, view→purchase {row['view_to_purchase_rate']}%\n"
-
-    top_daily = daily_df.sort_values("revenue", ascending=False).head(5)
-    context += "\n매출이 높았던 일자 TOP5:\n"
-    for _, row in top_daily.iterrows():
-        context += f"- {row['event_date']}: 매출 {row['revenue']:,.2f}, 일별 유저 {format_number(row['daily_user_count'])}명, view→purchase {row['view_to_purchase_rate']}%\n"
-
-    return context
+    if selected_month in overview_display_kpi:
+        context += overview_display_kpi[selected_month]
+        context += "\n답변 지침:\n"
+        context += "- 현재 선택 월 기준의 핵심 KPI를 먼저 설명한다.\n"
+        context += "- 사용자가 비교를 요청하지 않으면 다른 월과 비교하지 않는다.\n"
+        context += "- 매출 단위는 '조 달러'라고 풀어 쓰지 말고, '$749조', '$1,317조'처럼 대시보드 표기 방식으로 말한다.\n"
+        context += "- apple, samsung, xiaomi 등은 카테고리가 아니라 브랜드/품목 기준 TOP5로 설명한다.\n"
+        return context
 
 
 def make_retention_context(summary_data, selected_month):
-    kpi_df = summary_data["retention_kpi"]
-    day_df = summary_data["retention_day"]
-    cohort_df = summary_data["retention_first_purchase_cohort"]
-    category_df = summary_data["retention_category_top5"]
-    buyer_df = summary_data["retention_buyer_vs_nonbuyer"]
+    context = "[유저 행동 & 리텐션 페이지]\n"
+    context += "이 페이지는 전체 재방문율, Day1/Day7 재방문율, 일별 리텐션 커브, 첫구매 경과일 코호트, 카테고리별 구매자/비구매자 재방문율을 설명합니다.\n\n"
 
-    if selected_month != "전체":
-        kpi_df = kpi_df[kpi_df["month"] == selected_month]
-        day_df = day_df[day_df["month"] == selected_month]
-        cohort_df = cohort_df[cohort_df["month"] == selected_month]
-        category_df = category_df[category_df["month"] == selected_month]
-        buyer_df = buyer_df[buyer_df["month"] == selected_month]
+    retention_display_kpi = {
+        "전체": """
+핵심 KPI:
+- 전체 재방문율: 4.39%
+- Day1 재방문율: 0.80%
+- Day7 재방문율: 0.38%
+- 일별 리텐션 커브: 첫 시점에서 재방문율이 가장 높고, 이후 빠르게 감소한 뒤 낮은 수준에서 완만하게 유지된다.
+- 첫구매 경과일 추적 코호트: 첫 구매 이후 시간이 지날수록 재방문 강도가 약해지지만, 일부 구간에서 상대적으로 진한 유지 패턴이 확인된다.
+- 카테고리별 구매자 재방문율 TOP5: headphone 0.06%, tv 0.04%, vacuum 0.03%, washer 0.03%, refrigerators 0.02%
+- 구매자 vs 비구매자 카테고리 재방문율: electronics, unknown, appliances 카테고리에서 규모가 크게 나타나며, 카테고리별 구매자 재방문율 차이를 비교할 수 있다.
 
-    context = "[코호트/리텐션 페이지]\n"
-    context += "이 페이지는 전체 재방문율, Day1/Day7 재방문율, n-day 리텐션, 첫구매 경과일 코호트, 카테고리별 구매자/비구매자 재방문율을 설명합니다.\n\n"
+주의:
+- 위 수치는 Tableau 유저 행동 & 리텐션 대시보드의 전체 선택 화면에 표시된 값 기준이다.
+- 전체 선택 상태에서는 10월/11월을 따로 비교하지 말고 전체 기준 리텐션 KPI를 먼저 설명한다.
+""",
+        "10월": """
+핵심 KPI:
+- 전체 재방문율: 4.46%
+- Day1 재방문율: 0.90%
+- Day7 재방문율: 0.47%
+- 일별 리텐션 커브: 첫 시점에서 재방문율이 가장 높고, 이후 빠르게 감소하며 낮은 수준에서 완만하게 이어진다.
+- 첫구매 경과일 추적 코호트: 첫 구매 직후 구간에서 상대적으로 재방문 강도가 높고, 시간이 지날수록 점차 약해지는 패턴이 보인다.
+- 카테고리별 구매자 재방문율 TOP5: headphone 0.05%, tv 0.03%, washer 0.03%, vacuum 0.02%, refrigerators 0.02%
+- 구매자 vs 비구매자 카테고리 재방문율: electronics와 unknown의 규모가 크게 나타나며, 주요 카테고리별 구매자 재방문율 차이를 비교할 수 있다.
 
-    context += "리텐션 핵심 KPI:\n"
-    for _, row in kpi_df.iterrows():
-        context += f"""
-- {row['month']}
-  - 전체 유저 수: {format_number(row['total_user_count'])}
-  - 재방문 유저 수: {format_number(row['revisit_user_count'])}
-  - 전체 재방문율: {row['revisit_rate']}%
-  - Day1 재방문율: {row['day1_revisit_rate']}%
-  - Day7 재방문율: {row['day7_revisit_rate']}%
+주의:
+- 위 수치는 Tableau 유저 행동 & 리텐션 대시보드의 10월 선택 화면에 표시된 값 기준이다.
+- 10월 선택 상태에서는 10월 데이터만 설명하고, 11월과 비교하지 않는다.
+""",
+        "11월": """
+핵심 KPI:
+- 전체 재방문율: 4.66%
+- Day1 재방문율: 1.06%
+- Day7 재방문율: 0.53%
+- 일별 리텐션 커브: 첫 시점에서 재방문율이 가장 높고, 이후 빠르게 하락한 뒤 낮은 수준에서 완만하게 유지된다.
+- 첫구매 경과일 추적 코호트: 첫 구매 후 초반 구간에서 상대적으로 재방문 강도가 높고, 일부 경과일 구간에서 유지 패턴이 확인된다.
+- 카테고리별 구매자 재방문율 TOP5: headphone 0.05%, tv 0.04%, vacuum 0.03%, washer 0.03%, refrigerators 0.02%
+- 구매자 vs 비구매자 카테고리 재방문율: electronics와 unknown 카테고리가 큰 비중을 보이며, 이후 appliances, apparel, computers 등에서 재방문율 차이를 확인할 수 있다.
+
+주의:
+- 위 수치는 Tableau 유저 행동 & 리텐션 대시보드의 11월 선택 화면에 표시된 값 기준이다.
+- 11월 선택 상태에서는 11월 데이터만 설명하고, 10월과 비교하지 않는다.
 """
+    }
 
-    context += "\n카테고리별 구매자 재방문율 TOP5:\n"
-    for _, row in category_df.iterrows():
-        context += f"- {row['month']} {row['rank']}위: {row['category_code']} / 재방문율 {row['revisit_rate']}% / 구매자 {format_number(row['buyer_count'])}명\n"
-
-    context += "\n구매자 vs 비구매자 카테고리 재방문율 예시:\n"
-    sample_buyer = buyer_df.head(12)
-    for _, row in sample_buyer.iterrows():
-        context += f"- {row['month']} {row['category_code']} {row['group']}: 유저 {format_number(row['user_count'])}명, 재방문율 {row['revisit_rate']}%\n"
-
-        context += "\n월별 n-day 리텐션 주요 구간:\n"
-    key_days = day_df[day_df["day_n"].isin([1, 7, 14, 30])]
-    for _, row in key_days.iterrows():
-        context += f"- {row['month']} Day{int(row['day_n'])}: 리텐션 {row['retention_rate']}%, 유지 유저 {format_number(row['retained_user_count'])}명\n"
-
-    context += "\n첫구매 경과일 코호트 예시:\n"
-    cohort_sample = cohort_df[
-        (cohort_df["day_n"].isin([0, 1, 7, 14]))
-    ].head(12)
-
-    for _, row in cohort_sample.iterrows():
-        context += f"- {row['month']} 첫구매일 {int(row['first_purchase_day'])}일차 Day{int(row['day_n'])}: 리텐션 {row['retention_rate']}%, 코호트 유저 {format_number(row['cohort_user_count'])}명\n"
-    
-    return context
+    if selected_month in retention_display_kpi:
+        context += retention_display_kpi[selected_month]
+        context += "\n답변 지침:\n"
+        context += "- 현재 선택 월 기준의 리텐션 KPI를 먼저 설명한다.\n"
+        context += "- 사용자가 비교를 요청하지 않으면 다른 월과 비교하지 않는다.\n"
+        context += "- 전체 재방문율, Day1 재방문율, Day7 재방문율을 반드시 포함한다.\n"
+        context += "- 리텐션 커브와 첫구매 경과일 코호트는 핵심 흐름만 짧게 설명한다.\n"
+        context += "- 카테고리별 구매자/비구매자 재방문율은 화면에 보이는 주요 차이만 설명한다.\n"
+        context += "- 화면에 없는 정확한 수치는 추측하지 않는다.\n"
+        context += "- 이 페이지에서는 '첫 방문'이라는 표현보다 '첫 구매 이후' 또는 '첫 구매 경과일 기준'이라는 표현을 사용한다.\n"
+        return context
 
 
 def make_smartphone_context(summary_data, selected_month, selected_brand):
-    brand_df = summary_data["smartphone_brand"]
-    time_df = summary_data["smartphone_time"]
-    price_df = summary_data["smartphone_price_tier"]
-    bundle_df = summary_data["smartphone_bundle_top3"]
-
-    # 음수 구매 소요시간 제외
-    price_df = price_df[
-        (price_df["avg_time_to_purchase_sec"].isna()) |
-        (price_df["avg_time_to_purchase_sec"] >= 0)
-    ]
-
-    if selected_month != "전체":
-        brand_df = brand_df[brand_df["month"] == selected_month]
-        time_df = time_df[time_df["month"] == selected_month]
-        price_df = price_df[price_df["month"] == selected_month]
-        bundle_df = bundle_df[bundle_df["month"] == selected_month]
-
-    if selected_brand != "전체":
-        brand_df = brand_df[brand_df["brand"] == selected_brand]
-        time_df = time_df[time_df["brand"] == selected_brand]
-        price_df = price_df[price_df["brand"] == selected_brand]
-
     context = "[스마트폰 브랜드 심화 페이지]\n"
-    context += "이 페이지는 스마트폰 브랜드별 매출, 구매자 수, 구매 전환율, 인당 구매액, 시간대별 구매 패턴, 가격대별 구매 결정 시간, 함께 구매한 카테고리를 설명합니다.\n\n"
+    context += "이 페이지는 스마트폰 전체 매출, 구매자 수, 구매 전환율, 인당 구매액, 스마트폰 퍼널, 시간대별 구매 패턴, 가격대별 구매 결정 시간, 함께 구매한 카테고리, 상품/카테고리 비중을 설명합니다.\n\n"
 
-    context += "스마트폰 브랜드 KPI:\n"
-    for _, row in brand_df.head(10).iterrows():
-        context += f"""
-- {row['month']} {row['brand']}
-  - view 수: {format_number(row['view_count'])}
-  - cart 수: {format_number(row['cart_count'])}
-  - purchase 수: {format_number(row['purchase_count'])}
-  - 구매 총액: {row['revenue']:,.2f}
-  - 구매자 수: {format_number(row['purchase_user_count'])}
-  - view → purchase 전환율: {row['view_to_purchase_rate']}%
-  - 인당 구매액: {row['revenue_per_purchase_user']:,.2f}
+    smartphone_display_kpi = {
+        ("전체", "전체"): """
+핵심 KPI:
+- [스마트폰] 전체 매출: $1,495조
+- 구매자 수: 244만 명
+- 구매 전환율: 0.13%
+- 인당 구매액: $6억 8천만
+- View 수: 7백만 건
+- Cart 수: 1,006천 건
+- Purchase 수: 609천 건
+
+함께 구매한 카테고리 TOP3:
+- audio
+- kitchen
+- video
+
+가격대별 구매 결정 시간:
+- 전체 가격대에서 36시간 초과 비중이 가장 크게 나타난다.
+- 이월/저가형과 프리미엄 가격대의 구매 규모가 상대적으로 크다.
+- 즉시 구매와 12시간 이내 구매도 일부 존재하지만, 전체적으로는 장시간 비교 후 구매하는 비중이 크다.
+
+상품/카테고리 비중:
+- clocks, kitchen, telephone, camera, accessories, notebook, environment, video 등이 크게 나타난다.
+- 스마트폰 구매와 함께 생활가전, 액세서리, 디지털 주변 품목이 함께 언급되는 흐름으로 해석할 수 있다.
+
+시간대별 스마트폰 구매 패턴:
+- 매출 기준 일별 그래프는 월 중순인 15~17일 전후에 피크가 나타난다.
+- 매출 기준 요일별 그래프는 금요일과 토요일이 상대적으로 높다.
+- 매출 기준 시간별 그래프는 오후 14~17시 전후에 가장 높고, 저녁 이후 감소한다.
+- 구매자 수 기준 일별 그래프도 월 중순 15~17일 전후에 집중된다.
+- 구매자 수 기준 요일별 그래프는 금요일과 토요일이 상대적으로 높고, 일요일에는 다소 감소한다.
+- 구매자 수 기준 시간별 그래프는 오후 14~16시 전후에 가장 높고, 저녁 이후 빠르게 감소한다.
+
+주의:
+- 위 수치는 Tableau 스마트폰 브랜드 심화 대시보드의 전체 월, 전체 브랜드 선택 화면에 표시된 값 기준이다.
+- 세부 그래프 해석은 Tableau 기본 화면 및 제공된 필터별 캡처 기준이다.
+- 선택 월과 브랜드가 전체인 경우에는 특정 브랜드별 수치를 임의로 설명하지 않는다.
+""",
+
+        ("10월", "전체"): """
+핵심 KPI:
+- [스마트폰] 전체 매출: $565조
+- 구매자 수: 130만 명
+- 구매 전환율: 0.12%
+- 인당 구매액: $4억 7천만
+- View 수: 3백만 건
+- Cart 수: 335천 건
+- Purchase 수: 285천 건
+
+함께 구매한 카테고리 TOP3:
+- audio
+- kitchen
+- clocks
+
+가격대별 구매 결정 시간:
+- 전체 가격대에서 36시간 초과 비중이 가장 크게 나타난다.
+- 이월/저가형의 구매 규모가 가장 크고, 프리미엄 가격대가 그 뒤를 따른다.
+- 보급형과 준프리미엄은 상대적으로 규모가 작지만, 동일하게 장시간 비교 후 구매하는 비중이 크다.
+
+상품/카테고리 비중:
+- clocks, kitchen, camera, telephone, accessories, environment, notebook 등이 크게 나타난다.
+- 스마트폰 구매와 함께 생활가전, 액세서리, 디지털 주변 품목이 함께 언급되는 흐름으로 해석할 수 있다.
+
+시간대별 스마트폰 구매 패턴:
+- 매출 기준 일별 그래프는 월 중순 전후에 상대적으로 높고, 월말에는 낮아지는 흐름을 보인다.
+- 매출 기준 요일별 그래프는 화요일~목요일 구간이 높고, 금요일 이후 다소 낮아지는 흐름이다.
+- 매출 기준 시간별 그래프는 오전부터 증가해 오후 15~16시 전후에 가장 높고, 18시 이후 빠르게 감소한다.
+- 구매자 수 기준 일별 그래프는 중순~20일 전후에 높고, 월말에는 낮아지는 흐름이다.
+- 구매자 수 기준 요일별 그래프는 화요일~목요일이 상대적으로 높고, 금요일 이후 감소하는 흐름이다.
+- 구매자 수 기준 시간별 그래프는 오후 14~16시 전후에 가장 높고, 저녁 이후 빠르게 감소한다.
+
+주의:
+- 위 수치는 Tableau 스마트폰 브랜드 심화 대시보드의 10월, 전체 브랜드 선택 화면에 표시된 값 기준이다.
+- 세부 그래프 해석은 Tableau 기본 화면 및 제공된 필터별 캡처 기준이다.
+- 선택 월이 10월이고 브랜드가 전체인 경우에는 특정 브랜드별 수치를 임의로 설명하지 않는다.
+""",
+
+        ("11월", "전체"): """
+핵심 KPI:
+- [스마트폰] 전체 매출: $930조
+- 구매자 수: 158만 명
+- 구매 전환율: 0.12%
+- 인당 구매액: $6억 6천만
+- View 수: 4백만 건
+- Cart 수: 671천 건
+- Purchase 수: 324천 건
+
+함께 구매한 카테고리 TOP3:
+- audio
+- kitchen
+- video
+
+가격대별 구매 결정 시간:
+- 전체 가격대에서 36시간 초과 비중이 가장 크게 나타난다.
+- 이월/저가형과 프리미엄 가격대의 구매 규모가 상대적으로 크다.
+- 보급형과 준프리미엄은 상대적으로 규모가 작지만, 동일하게 장시간 비교 후 구매하는 비중이 크다.
+
+상품/카테고리 비중:
+- clocks, kitchen, camera, telephone, shoes, notebook, environment, accessories 등이 크게 나타난다.
+- 스마트폰 구매와 함께 생활가전, 액세서리, 디지털 주변 품목이 함께 언급되는 흐름으로 해석할 수 있다.
+
+시간대별 스마트폰 구매 패턴:
+- 매출 기준 일별 그래프는 월 중순인 15~17일 전후에 매우 뚜렷한 피크가 나타난다.
+- 매출 기준 요일별 그래프는 금요일과 토요일이 높고, 월요일~수요일은 상대적으로 낮다.
+- 매출 기준 시간별 그래프는 오전부터 증가해 오후 14~17시 전후에 가장 높고, 18시 이후 급격히 감소한다.
+- 구매자 수 기준 일별 그래프는 15~17일 전후에 구매자 수가 크게 증가하고 이후 낮은 수준으로 안정된다.
+- 구매자 수 기준 요일별 그래프는 금요일과 토요일이 상대적으로 높고, 일요일에는 다소 감소한다.
+- 구매자 수 기준 시간별 그래프는 오후 14~16시 전후에 가장 높고, 저녁 이후 빠르게 감소한다.
+
+주의:
+- 위 수치는 Tableau 스마트폰 브랜드 심화 대시보드의 11월, 전체 브랜드 선택 화면에 표시된 값 기준이다.
+- 세부 그래프 해석은 Tableau 기본 화면 및 제공된 필터별 캡처 기준이다.
+- 선택 월이 11월이고 브랜드가 전체인 경우에는 특정 브랜드별 수치를 임의로 설명하지 않는다.
 """
+    }
 
-    top_time = time_df.sort_values("purchase_count", ascending=False).head(5)
-    context += "\n구매가 많이 발생한 시간대 TOP5:\n"
-    for _, row in top_time.iterrows():
-        context += f"- {row['month']} {row['brand']} {row['hour']}시({row['time_segment']}): 구매 {format_number(row['purchase_count'])}건, 매출 {row['revenue']:,.2f}\n"
+    key = (selected_month, selected_brand)
 
-    context += "\n함께 구매한 카테고리 TOP3:\n"
-    for _, row in bundle_df.iterrows():
-        context += f"- {row['month']} {row['rank']}위: {row['category_code']} / 구매 {format_number(row['purchase_count'])}건 / 구매자 {format_number(row['buyer_count'])}명\n"
+    if key in smartphone_display_kpi:
+        context += smartphone_display_kpi[key]
+        context += "\n답변 지침:\n"
+        context += "- 현재 선택 월과 선택 브랜드 기준의 KPI를 먼저 설명한다.\n"
+        context += "- 사용자가 비교를 요청하지 않으면 다른 월이나 다른 브랜드와 비교하지 않는다.\n"
+        context += "- 스마트폰 전체 매출, 구매자 수, 구매 전환율, 인당 구매액, View/Cart/Purchase 수치를 반드시 포함한다.\n"
+        context += "- 시간대별 구매 패턴, 가격대별 구매 결정 시간, 함께 구매한 카테고리, 상품/카테고리 비중은 핵심 흐름만 짧게 설명한다.\n"
+        context += "- 시간대별 구매 패턴의 세부 필터는 제공된 캡처 기준으로 해석하며, 화면에 없는 정확한 수치는 추측하지 않는다.\n"
+        context += "- 선택 브랜드가 전체인 경우에는 특정 브랜드별 수치를 임의로 설명하지 않는다.\n"
+        return context
 
-        context += "\n가격대별 구매 결정 시간 예시:\n"
-    top_price = price_df.sort_values("purchase_count", ascending=False).head(8)
-
-    for _, row in top_price.iterrows():
-        avg_sec = row["avg_time_to_purchase_sec"]
-        avg_min = avg_sec / 60 if pd.notna(avg_sec) else None
-
-        if avg_min is not None:
-            context += f"- {row['month']} {row['brand']} {row['price_tier']} / {row['consider_purchase_tier']} / {row['decision_tier']}: 평균 구매 소요시간 약 {avg_min:.1f}분, 구매 {format_number(row['purchase_count'])}건\n"
-        else:
-            context += f"- {row['month']} {row['brand']} {row['price_tier']}: 구매 {format_number(row['purchase_count'])}건, 구매 소요시간 정보 없음\n"
-    
-    return context
+    return """
+[스마트폰 브랜드 심화 페이지]
+현재 선택한 월/브랜드 조합에 대한 Tableau 화면 기준 요약값이 아직 입력되지 않았습니다.
+현재 AI 설명은 전체 브랜드 기준의 주요 KPI와 그래프 패턴 중심으로 제공됩니다.
+브랜드를 개별 선택한 경우에는 화면에 보이는 값을 기준으로 직접 확인해야 합니다.
+"""
 
 # =============================================================================
 # 대화 기록 초기화
@@ -660,13 +770,13 @@ with left_col:
                 unsafe_allow_html=True
             )
 
-        st.markdown('<div class="expected-title">예정 화면 구성</div>', unsafe_allow_html=True)
+        st.markdown('<div class="expected-title">대시보드 구성</div>', unsafe_allow_html=True)
 
         st.markdown(
             """
             <div class="expected-list">
             • 전체 현황 분석<br>
-            • 코호트 / 리텐션<br>
+            • 유저 행동 & 리텐션<br>
             • 스마트폰 브랜드 심화
             </div>
             """,
@@ -677,7 +787,7 @@ with left_col:
 # 오른쪽: AI 챗봇 영역
 # =============================================================================
 with right_col:
-    with st.container(border=True, height=920):
+    with st.container(border=True, height=1000):
         st.markdown(
             """
             <div class="ai-title">
@@ -690,15 +800,14 @@ with right_col:
         st.markdown(
             """
             <div class="ai-guide-box">
-                대시보드의 분석과 설명을 질문할 수 있습니다.
-            </div>
+                대시보드의 분석과 설명을 질문할 수 있습니다.<br>
             """,
             unsafe_allow_html=True
         )
         
         dashboard_page = st.selectbox(
             "대시보드 페이지",
-            ["전체 현황 분석", "유저행동 & 리텐션", "스마트폰 브랜드 심화"]
+            ["전체 현황 분석", "유저 행동 & 리텐션", "스마트폰 브랜드 심화"]
         )
         
         selected_month = st.selectbox(
@@ -709,26 +818,26 @@ with right_col:
         selected_brand = "전체"
         
         if dashboard_page == "스마트폰 브랜드 심화":
-            brand_df = summary_data["smartphone_brand"]
-            brand_options = ["전체"] + sorted(brand_df["brand"].dropna().unique().tolist())
-
             selected_brand = st.selectbox(
                 "스마트폰 브랜드 선택",
-                brand_options
+                ["전체"]
             )
             
         if dashboard_page == "전체 현황 분석":
             dashboard_context = make_overview_context(summary_data, selected_month)
 
-        elif dashboard_page == "코호트/리텐션":
+        elif dashboard_page == "유저 행동 & 리텐션":
             dashboard_context = make_retention_context(summary_data, selected_month)
 
-        else:
+        elif dashboard_page == "스마트폰 브랜드 심화":
             dashboard_context = make_smartphone_context(
                 summary_data,
                 selected_month,
                 selected_brand
-            )     
+            )
+        
+        else:
+            dashboard_context = "선택한 대시보드 페이지에 맞는 요약 데이터를 찾지 못했습니다."
         
         if st.button("대화 초기화", use_container_width=True):
             st.session_state.messages = [
@@ -746,7 +855,8 @@ with right_col:
         with chat_history_box:
             for message in st.session_state.messages:
                 with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+                    safe_content = message["content"].replace("$", "\\$")
+                    st.markdown(safe_content)
 
 
         with st.form("chat_form", clear_on_submit=True):
@@ -779,7 +889,7 @@ with right_col:
 - 선택 월: {selected_month}
 - 선택 브랜드: {selected_brand}
 
-아래는 현재 필터 기준으로 요약 CSV에서 추출한 데이터이다.
+아래는 현재 선택한 대시보드 페이지와 필터 기준으로 정리한 Tableau 화면 요약 데이터이다.
 
 [현재 필터 기준 요약 데이터]
 {dashboard_context}
@@ -795,12 +905,15 @@ with right_col:
 1. 반드시 위 요약 데이터의 숫자를 근거로 설명한다.
 2. Tableau 화면을 직접 본 것처럼 말하지 말고, 제공된 요약 데이터 기준으로 설명한다.
 3. 현재 요약 데이터에 없는 내용은 추측하지 않는다.
-4. 답변은 가능하면 아래 순서로 작성한다.
-   - 핵심 요약
-   - 수치 근거
-   - 해석
-   - 발표용 멘트
-5. 너무 길게 쓰지 말고 발표자가 바로 읽을 수 있게 작성한다.
+4. 선택 월이 "전체"인 경우에는 10월/11월 월별 수치를 먼저 나열하지 말고, "전체" 항목의 KPI를 우선 설명한다. 월별 비교는 사용자가 요청한 경우에만 보조적으로 언급한다.
+5. 사용자가 요약을 요청하면 아래 순서로 짧게 답한다.
+   - 핵심 요약 2~3문장
+   - 주요 수치 3~5개
+   - 발표용 멘트 1개
+6. 원인이나 전략은 사용자가 요청한 경우에만 제안한다.
+7. 이상한 번역체 표현을 사용하지 않는다.
+8. 매출 단위는 "조 달러"라고 풀어 쓰지 말고, 대시보드 표기처럼 "$2,066조" 또는 "대시보드 기준 2,066조"처럼 표현한다.
+9. apple, samsung, xiaomi, huawei, lg처럼 브랜드명이 나오는 TOP5는 "카테고리"라고 단정하지 말고 "브랜드/품목 기준 TOP5"로 설명한다.
 """
 
             try:
@@ -822,5 +935,10 @@ with right_col:
                 st.rerun()
 
             except Exception as e:
-                st.error("Gemini 응답 생성 중 오류가 발생했습니다.")
-                st.write(e)
+                error_text = str(e)
+
+                if "503" in error_text or "UNAVAILABLE" in error_text or "high demand" in error_text:
+                    st.warning("현재 Gemini 요청이 많아 응답이 지연되고 있습니다. 잠시 후 다시 질문을 보내주세요.")
+                else:
+                    st.error("Gemini 응답 생성 중 오류가 발생했습니다.")
+                    st.write(e)
